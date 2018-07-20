@@ -24,7 +24,6 @@ import can
 import atexit
 import numpy as np
 
-
 #######################################################################################################################
 
 #global variable to control whether the GUI is connected
