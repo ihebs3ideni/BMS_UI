@@ -451,9 +451,9 @@ class Data():
             #print(self.errors['VoltageErrors'][5])'''
     #data for Fan Control
 
-        self.fanInstructions = {}
+        self.fanCommands = {}
         for i in range(101):
-            self.fanInstructions.update({i : hex(randint(1,100))})
+            self.fanCommands.update({i : hex(randint(1,100))})
 
 
 
@@ -665,8 +665,8 @@ class Data():
 
 
     def getFanRotationSpeed(self,x):
-        print(self.fanInstructions)
-        return self.fanInstructions[x]
+        print(self.fanCommands)
+        return self.fanCommands[x]
 
 
 
