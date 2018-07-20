@@ -3,26 +3,28 @@
     Project: Nanni's Little Helper
     '''
 
-import sys
-import os
-from matplotlib import pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
-from PyQt5.QtCore import QTimer, Qt
-import threading
-import csv
-from PyQt5.QtGui import QIcon, QPixmap, QColor
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QAction, qApp, QFileDialog, QRadioButton, QHBoxLayout, QVBoxLayout,
-                             QPushButton, QWidget, QTableWidget, QTabWidget, QCheckBox, QSlider, QTableWidgetItem,
-                             QGridLayout,QAbstractItemView, QLabel, QLineEdit,QLCDNumber )
-from random import randint
-import traceback
-import logging
-from can.interfaces.pcan import PcanBus
-from can.bus import BusABC
-import can
 import atexit
+import csv
+import logging
+import os
+import sys
+import threading
+import traceback
+from random import randint
+
+import can
+import matplotlib.animation as animation
 import numpy as np
+from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QIcon, QPixmap, QColor
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QAction, qApp, QFileDialog, QRadioButton, QHBoxLayout,
+                             QVBoxLayout,
+                             QPushButton, QWidget, QTableWidget, QTabWidget, QCheckBox, QSlider, QTableWidgetItem,
+                             QGridLayout, QAbstractItemView, QLabel, QLineEdit, QLCDNumber)
+from can.bus import BusABC
+from can.interfaces.pcan import PcanBus
+from matplotlib import pyplot as plt
+from matplotlib import style
 
 #######################################################################################################################
 
@@ -1177,6 +1179,8 @@ class GeneralsTab(QWidget):
 
         #horizental layout containing the fan controlling slider
 
+        self.comment = QLabel('Enable')
+        self.enable = QCheckBox()
         self.fan = QLabel('Fan Controller: ')
         self.lcd = QLCDNumber(self)
         self.sld = QSlider(Qt.Horizontal,self)
@@ -1188,6 +1192,8 @@ class GeneralsTab(QWidget):
         self.lcd.setFixedSize(55, 30)
         hbox = QHBoxLayout()
         hbox.addStretch()
+        hbox.addWidget(self.comment)
+        hbox.addWidget(self.enable)
         hbox.addWidget(self.fan)
         hbox.addWidget(self.sld)
         hbox.addSpacing(30)
@@ -1326,16 +1332,18 @@ class GeneralsTab(QWidget):
 
     def controlFan(self,x):
         global Connected
-        if Connected:
-            try:
-                print(x)
-                #self.com1.control_fan(self.bus,self.data.getFanRotationSpeed(x),0x23)
-                self.data.getFanRotationSpeed(x)
-            except Exception as e:
-                #self.enable.setChecked(False)
-                logging.error(traceback.format_exc())
-        else:
-            print("you need to be connected")
+        if self.enable.isChecked(): #the check box needs to be checked in order to execute any command
+            if Connected: #there needs to be connection in order to execute any command
+                try:
+
+                    print(x)
+                    #self.com1.control_fan(self.bus,self.data.getFanRotationSpeed(x),0x23)
+                    self.data.getFanRotationSpeed(x)
+                except Exception as e:
+                    #self.enable.setChecked(False)
+                    logging.error(traceback.format_exc())
+            else:
+                print("you need to be connected")
 
 
 
