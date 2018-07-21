@@ -492,7 +492,7 @@ class Data():
         except Exception as e:
             logging.error(traceback.format_exc())
 
-    #a = BMS_Communications()
+
 
     def getErrors(self,cell, type): #methode that returns the errors
         errors = { 'v' :self.errors['VoltageErrors'], 't': self.errors['TemperatureErrors'] }
@@ -2031,7 +2031,7 @@ class MyTabsWidget(QWidget):
         t4.setDaemon(True)
         t4.start()
 
-        self.first_tab.sld.valueChanged.connect(self.first_tab.lcd.display)
+        threading.Thread(target= self.first_tab.sld.valueChanged.connect(self.first_tab.lcd.display)).start()
 
 
         self.tab1.layout.addWidget(self.first_tab)

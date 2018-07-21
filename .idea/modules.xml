@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/BMS_UI.iml" filepath="$PROJECT_DIR$/.idea/BMS_UI.iml" />
+      <module fileurl="file://$USER_HOME$/Hydra_userInterface/.idea/Hydra_userInterface.iml" filepath="$USER_HOME$/Hydra_userInterface/.idea/Hydra_userInterface.iml" />
     </modules>
   </component>
 </project>
