@@ -1078,7 +1078,7 @@ class GeneralsTab(QWidget):
         self.respond= QLabel('   ')
 
 
-        #HV_BUtton_simuate
+        #HV_Button_simuator
         self.HVButton = QPushButton('HV Button')
         self.logo9 = QLabel('')
         self.i9 = QPixmap('C:/Users/iheb/BMS_UI/icons/HV.png')
@@ -1782,7 +1782,8 @@ class CellTab(QWidget):
         #timer
         self.timer = QTimer()
         #connectTimer
-        if sender.text() == 'Start Refresh':
+        global Connected
+        if sender.text() == 'Start Refresh' and Connected:
             button.setText('Stop Refresh')
 
             threading.Thread(target= self.timer.timeout.connect(lambda: self.thread_refill1(v_check, t_check, table, c, self.timer))).start()
@@ -2047,7 +2048,7 @@ class MyTabsWidget(QWidget):
         # save Button
         self.second_tab.b2.clicked.connect(self.second_tab.save_file)
         # refreshButton
-        self.second_tab.b1.clicked.connect(lambda: threading.Thread(target= self.second_tab.refresh(self.second_tab.b1, self.second_tab.v,
+        self.second_tab.b1.clicked.connect(lambda:  threading.Thread(target= self.second_tab.refresh(self.second_tab.b1, self.second_tab.v,
                                             self.second_tab.t, self.second_tab.tableWidget,
                                             140)).start())
 
