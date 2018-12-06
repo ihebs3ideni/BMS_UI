@@ -76,7 +76,7 @@ class CellTab(QWidget):
 
 
         self.averageVoltage = QLabel('cells Average Voltage: ')
-        self.lineAV = QLineEdit()
+        self.lineAV = QLineEdit(self)
         self.lineAV.setFixedWidth(80)
         self.lineAV.setReadOnly(True)
         self.logoAV = QLabel('')
@@ -249,12 +249,11 @@ class CellTab(QWidget):
 
         if type =='v':
 
-
-            return BMS_Data.getdata(cell,'v')/1000
+            return BMS_Data.getdata(cell,'v')/1000 #mV to V
 
         elif type == 't':
 
-            return BMS_Data.getdata(cell,'t')/10
+            return BMS_Data.getdata(cell,'t')/10 # C/10 to C
 
     def getErrors(self, cell, type): #methode that get's the errors from the Data class
         #self.dataError = BMS_Data.Data(140, bus=self.bus, com=self.com)
@@ -341,5 +340,9 @@ class CellTab(QWidget):
             else:
                 j+=1
         return v
-
+    def startRefresh(self, table, num):
+        self.refresh(self.startRefreshButton,self.voltageCheckBox,self.temperatureCheckBox, table, num)
+    def stopRefresh(self, table, num):
+        self.startRefreshButton.setText('Start Refresh')
+        self.refresh(self.startRefreshButton, self.voltageCheckBox, self.temperatureCheckBox, table, num)
             ####################################################################################################################

@@ -22,10 +22,10 @@ transmissionError = 'None'
 HV_Button = 'Off'
 
 
-errors = {'currentError': True , 'VoltageErrors': np.array([True] * p.numberOfCells),
-          'TemperatureErrors': np.array([True] * (p.numberOfCells-60)) }
+errors = {'currentError': True , 'VoltageErrors': np.array([True] * (p.numberOfCells+1)),
+          'TemperatureErrors': np.array([True] * (p.numberOfCells-59)) }
 
-
+index = 0
 
 """ variable declaration ends"""
 
@@ -67,8 +67,8 @@ def get_cell_voltage(cell): #extracts the voltages of a specific cell from rawVo
             for i in range(len(rawVoltages) - 1, 0, -1):
 
                 if rawVoltages[i]['ID'] == get_ID(cell, p.voltageIDs[0]):
-                    idleVoltage = (rawVoltages[i]['data'][get_position(cell) * 2] << 8) + \
-                                  rawVoltages[i]['data'][get_position(cell) * 2 + 1]
+                    idleVoltage = (rawVoltages[i]['data'][get_position(cell+1) * 2] << 8) + \
+                                  rawVoltages[i]['data'][get_position(cell+1) * 2 + 1]
                     #print('a=',a)
                     #print('V=',self.Voltages)
                     # print(Voltages[i])
@@ -256,9 +256,9 @@ def getMinTemperature():
         if i != 0:
             transmissionError = "None"
             MinTemp = rawGenerals[i - 1][7]*0.5
-            return MinTemp
+            return float(MinTemp)
         else:
-            return p.defaultValues['minTemperature']
+            return float(p.defaultValues['minTemperature'])
     except Exception as e:
 
         transmissionError = 'Transmission Error'
@@ -298,7 +298,7 @@ def setErrors(num,type): #methode that checks the existence of errors and fills 
 
 def getErrors(cell, type): #methode that returns the errors
     errors_dic = {'v': errors['VoltageErrors'], 't': errors['TemperatureErrors']}
-    return errors_dic[type][cell]
+    return errors_dic[type][cell+1]
 
 def getHV():
     global HV_Button
@@ -308,6 +308,34 @@ def setHv(state):
     global HV_Button
     hv_dic = {0: 'off', 1: 'on'}
     HV_Button = hv_dic[state]
+
+def logData(file):
+    import datetime
+    now = datetime.datetime.now()
+    if p.getLogDataControl():
+
+        file.write('\n\n *********%s******** \n' % str(now))
+        file.write("\n\n maxVoltage: %.2f " % getMaxVoltage())
+        file.write("\t minVoltage: %.2f " % getMinVoltage())
+        file.write("\n maxTemperature: %.2f " % getMaxTemperature())
+        file.write("\t minTemperature: %.2f " % getMinTemperature())
+        file.write("\n Current: %.2f " % getCurrent())
+        file.write("\t soc: %d " % getSOC())
+        file.write("\n State: %s " % getState())
+        file.write("\t SC: %s " % getSC())
+        file.write('\n\nVoltages:\n')
+        for i in range(0, p.numberOfCells):
+            if i%10 == 0:
+                file.write('\n')
+            file.write("%.2f | " %get_cell_voltage(i))
+        file.write('\n\nTemperatures:\n')
+        for i in range(0, p.numberOfTempSensors):
+            if i%10 == 0:
+                file.write('\n')
+            file.write("%.2f | " %get_cell_temperature(i))
+        print('data logged successfully ')
+
+
 
 
 """ mathods declaration ends"""

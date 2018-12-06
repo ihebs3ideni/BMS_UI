@@ -21,20 +21,23 @@ import BMS_Data
 class Communications(BusABC):
     def __init__(self):
         super().__init__()
-        self.cont=0
-        self.cont1 = 0
+        self.connectController=0
+        self.disconnectController = 0
         self.startCommunication = False
-        self.check = False
+        self.ReadBusController = False # control
 
     def comm(self,bus):
         try:
             print('starting communications')
+            self.sending(bus, p.dummyBite, id=p.USER_COMMAND_CAN_MESSAGE)
             for msg in bus:
-                if self.check:
+                if self.ReadBusController:
 
 
                     threading.Thread(target= self.sending(bus,[0,0,0,0], p.DIS_CAN_MESSAGE)).start()
+                    print('DIS')
                     threading.Thread(target= self.sending(bus,p.getVoltagesCommand,id=p.USER_COMMAND_CAN_MESSAGE)).start()
+                    print('voltage requested')
                     #print(msg)
                     if msg.arbitration_id in p.voltageIDs:
                         dic = {'ID': 0, 'data': []}
@@ -87,15 +90,15 @@ class Communications(BusABC):
             bus.reset()
     def terminate(self):
 
-        self.check = False #Disable reading from bus
-        self.cont = 0
-        self.cont1 +=1
-        if self.cont1 == 2:
+        self.ReadBusController = False #Disable reading from bus
+        self.connectController = 0
+        self.disconnectController +=1
+        if self.disconnectController == 2:
             print(BMS_Data.rawVoltages)
             print('v')
-        elif self.cont1 == 3:
+        elif self.disconnectController == 3:
             print(BMS_Data.rawTemperatures)
-            self.cont1=1
+            self.disconnectController=1
             print('t')
 
     def close(self,bus):
@@ -103,16 +106,18 @@ class Communications(BusABC):
 
     def starting(self,bus):
         try:
-            self.cont = self.cont + 1
+            self.connectController += 1
 
-            if self.cont == 1:
+            if self.connectController == 1:
 
-                self.cont1 = 0
+                self.disconnectController = 0
 
-                self.check = True
+                self.ReadBusController = True
+
                 t = threading.Thread(target=lambda: self.comm(bus))
                 t.setDaemon(True)
                 t.start()
+
             else:
                 pass
             p.setBusStatus(True)
@@ -123,7 +128,6 @@ class Communications(BusABC):
 
 
     def initialize_bus(self):
-
         bus = PcanBus(bustype='pcan', channel='PCAN_USBBUS1', bitrate=1000000)
         atexit.register(bus.shutdown)
         p.setBusStatus(True)
@@ -161,11 +165,30 @@ class Communications(BusABC):
 
     def sendFanControl(self,bus,data):
         try:
+
             self.sending(bus,d=[p.fanControlCommand, data],id=p.USER_COMMAND_CAN_MESSAGE)
             p.setBusStatus(True)
         except can.CanError:
             p.setBusStatus(False)
             logging.error(traceback.format_exc())
+
+    def setUserFlag(self, bus):
+        try:
+            self.sending(bus,d=p.setUserCommand,id=p.USER_COMMAND_CAN_MESSAGE)
+            p.setBusStatus(True)
+        except can.CanError:
+            p.setBusStatus(False)
+            logging.error(traceback.format_exc())
+
+    def resetUserFlag(self, bus):
+        try:
+            self.sending(bus,d=p.resetUserCommand,id=p.USER_COMMAND_CAN_MESSAGE)
+            p.setBusStatus(True)
+        except can.CanError:
+            p.setBusStatus(False)
+            logging.error(traceback.format_exc())
+
+
     '''def reku_simulate(self,bus):
         self.sending(bus, d=[0,0,32],id=0x41)
 

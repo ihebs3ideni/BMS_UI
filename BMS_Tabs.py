@@ -22,10 +22,10 @@ class MyTabsWidget(QWidget):
         self.layout = QVBoxLayout(self)
 
         # Initialize tab screen
-        self.tabs = QTabWidget()
-        self.tab1 = QWidget()
-        self.tab2 = QWidget()
-        self.tab3 = QWidget()
+        self.tabs = QTabWidget(self)
+        self.tab1 = QWidget(self)
+        self.tab2 = QWidget(self)
+        self.tab3 = QWidget(self)
         #self.tab4 = QWidget()
         #self.tabs.resize(300, 200)
 
@@ -84,7 +84,7 @@ class MyTabsWidget(QWidget):
         t4.start()
 
         threading.Thread(target= self.first_tab.sld.valueChanged.connect(self.first_tab.lcd.display)).start()
-
+        self.first_tab.enable.clicked.connect( self.first_tab.sendUserFlag)
         self.tab1.layout.addWidget(self.first_tab)
 
         self.tab1.setLayout(self.tab1.layout)
@@ -99,10 +99,12 @@ class MyTabsWidget(QWidget):
         # save Button
         self.second_tab.saveButton.clicked.connect(self.second_tab.save_file)
         # refreshButton
-        self.second_tab.startRefreshButton.clicked.connect(lambda:  threading.Thread(target= self.second_tab.refresh(
+        """self.second_tab.startRefreshButton.clicked.connect(lambda:  threading.Thread(target= self.second_tab.refresh(
                                                                 self.second_tab.startRefreshButton, self.second_tab.voltageCheckBox,
                                                             self.second_tab.temperatureCheckBox, self.second_tab.tableWidget,p.numberOfCells))
-                                                           .start())
+                                                           .start())"""
+        self.second_tab.startRefreshButton.clicked.connect(lambda: threading.Thread(target=self.second_tab.startRefresh(
+         self.second_tab.tableWidget, p.numberOfCells)).start())
 
         # slider bar
         self.second_tab.slider.valueChanged.connect(self.second_tab.v_change)

@@ -556,6 +556,19 @@ class GeneralsTab(QWidget):
             else:
                 print("you need to be connected")
 
+    def sendUserFlag(self):
+        sender = self.sender()
+        if BMS_ControlParameter.getConnectionState() and sender.isChecked():
+            self.com1.setUserFlag(self.bus)
+            print('set')
+        elif BMS_ControlParameter.getConnectionState()and not(sender.isChecked()):
+            self.com1.resetUserFlag(self.bus)
+            print('reset')
+        else:
+            print('not Connected')
+
+
+
 
 
 

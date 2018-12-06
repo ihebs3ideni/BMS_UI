@@ -3,8 +3,9 @@
     Project: Nanni's Little Helper 2.0
     '''
 
-import atexit
 import logging
+import os
+import pathlib
 import sys
 import threading
 import traceback
@@ -12,6 +13,7 @@ import traceback
 import can
 import matplotlib.animation as animation
 import numpy as np
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QAction, qApp, QHBoxLayout,
                              QVBoxLayout, QWidget, QLabel)
@@ -25,7 +27,8 @@ import BMS_Tabs
 
 ##################################### Graphical Design #####################################################
 
-
+connectingClicked = 0
+alreadyClicked = 0
 '''class DriverInformations(QWidget):
     def __init__(self,bus, data,bms_com):
         super().__init__()
@@ -229,7 +232,7 @@ class Nanni_Main_Window(QMainWindow):
         save.triggered.connect(self.tabs_widget.second_tab.save_file)
         new.triggered.connect(self.new_Widget)
         connect.triggered.connect(self.Connecting) #check it out
-        disconnect.triggered.connect(self.deconnecting)
+        disconnect.triggered.connect(self.disconnecting)
         #refresh.triggered.connect(self.updateComPorts) #check it out
 
         v_graph.triggered.connect(lambda: self.thread_plot('v'))
@@ -359,22 +362,51 @@ class Nanni_Main_Window(QMainWindow):
 
 
     def Connecting(self):
+        global connectingClicked, alreadyClicked
+        connectingClicked += 1
+        alreadyClicked += 1
+        if connectingClicked == 1:
+            self.tabs_widget.first_tab.enable.setChecked(False)
+            BMS_ControlParameter.setLogDataControl(True)
+            logdata = threading.Thread(target=self.timeLogData())
+            logdata.start()
         try:
             self.com.starting(self.bus)
-            BMS_ControlParameter.setConnectionState(True)
 
+            BMS_ControlParameter.setConnectionState(True)
+            #self.tabs_widget.second_tab.startRefresh(self.tabs_widget.second_tab.tableWidget, BMS_ControlParameter.numberOfCells)
         except TypeError:
             print('error connecting')
 
 
-    def deconnecting(self):
+
+    def disconnecting(self):
         try:
             self.com.terminate()
             BMS_ControlParameter.setConnectionState(False)
+            BMS_ControlParameter.setLogDataControl(False)
+            global connectingClicked
+            connectingClicked = 0
+            self.tabs_widget.second_tab.stopRefresh(self.tabs_widget.second_tab.tableWidget,
+                                                     BMS_ControlParameter.numberOfCells)
 
         except TypeError:
-            print('error deconnecting')
+            print('error disconnecting')
 
+    def timeLogData(self):
+        global alreadyClicked
+        path = str(os.getcwd()) + "\\logdata"  # create a new directory path
+        pathlib.Path(path).mkdir(exist_ok=True)  # create the directory if it doesn't exist
+
+        if alreadyClicked == 1:
+            file = BMS_ControlParameter.createLogDataFile()  # create a file for the logdata
+            BMS_Data.logData(file)# create first logdata
+            timer = QTimer()
+            timer.timeout.connect(lambda: BMS_Data.logData(file))
+            timeToLogData = 10*1000 #5min
+            timer.start(timeToLogData)
+            import atexit
+            atexit.register(timer.stop)
 
     '''def draw_v(self):
             if self.tabs_widget.second_tab.tableWidget.rowCount() != 0:
@@ -445,8 +477,8 @@ class Nanni_Main_Window(QMainWindow):
 class NoPcan(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.window = QWidget()
+        BMS_ControlParameter.setBusStatus(False)
+        self.window = QWidget(self)
         self.setCentralWidget(self.window)
 
         self.setWindowIcon(QIcon('C:/Users/iheb/BMS_UI/icons/error.png'))
@@ -466,11 +498,19 @@ class NoPcan(QMainWindow):
 
         self.window.setLayout(h_box)
 
-
+"""def endLog(start, file):
+    BMS_ControlParameter.incrimentTimeLog()
+    end= time.time()
+    log= end-start
+    
+    print(end-start)
+    file.write('this session took %f to execute\n' %log  )"""
 
 
 ########################################## Main #######################################################
 def main_BMS():
+    global connectingClicked
+    connectingClicked = 0
     try:
         bms_com = BMS_Communications.Communications()
         style.use('seaborn')  # style for matplotlib graph
@@ -478,12 +518,13 @@ def main_BMS():
 
             bus = bms_com.initialize_bus()
             #bus=[1,2,3]
-            atexit.register(bms_com,bus)
+            #atexit.register(bus)
 
 
             app = QApplication(sys.argv)
             a_window = Nanni_Main_Window(bus, bms_com)
             a_window.show()
+
             gui_thread = threading.Thread(target=sys.exit(app.exec_()))
             gui_thread.setDaemon(True)
             gui_thread.start()
@@ -493,14 +534,20 @@ def main_BMS():
             app = QApplication(sys.argv)
             a_window = NoPcan()
             a_window.show()
-
+            print('bus is okay: ', BMS_ControlParameter.getBusStatus())
             gui_thread = threading.Thread(target=sys.exit(app.exec_()))
             gui_thread.setDaemon(True)
             gui_thread.start()
+        '''finally:
+            bus.shutdown()'''
 
     except Exception as e:
         logging.error(traceback.format_exc())
 
 
 
-main_BMS()
+if __name__ == "__main__":
+    main_BMS()
+
+
+
